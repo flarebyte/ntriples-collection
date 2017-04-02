@@ -12,6 +12,7 @@
     "lint": "eslint src test",
     "deps-check": "dependency-check package.json --entry src",
     "check": "npm run lint -s",
+    "fix": "eslint src test --fix",
     "watch": "watch 'npm run build' src test",
     "test": "babel-node test/index.js | tspec",
     "prebuild": "npm run check -s && npm run clean -s",
@@ -36,7 +37,7 @@
     "n-triples",
     "filter"
   ],
-  "author": "olih <olih@users.noreply.github.com>",
+  "author": "Olivier Huin <olih@users.noreply.github.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/flarebyte/ntriples-collection/issues"
@@ -64,6 +65,7 @@
   },
   "dependencies": {
     "lodash": "^4.17.4",
+    "moment": "^2.18.1",
     "n3": "^0.9.1",
     "string": "^3.3.3"
   }
