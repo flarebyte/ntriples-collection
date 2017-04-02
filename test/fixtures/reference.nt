@@ -1,0 +1,7 @@
+<http://www.site.org/version/123/> <http://purl.org/dc/elements/1.1/publisher> "Publisher Alpha" .
+<http://www.site.org/version/123/> <http://purl.org/dc/elements/1.1/creator> "Creator Alpha" .
+<http://www.site.org/version/124/> <http://purl.org/dc/elements/1.1/publisher> "Publisher Beta" .
+<http://www.site.org/version/124/> <http://purl.org/dc/elements/1.1/creator> "Creator Beta" .
+<http://www.site.org/version/125/> <http://purl.org/dc/elements/1.1/creator> "Dave Beckett" .
+<http://www.site.org/version/125/> <http://purl.org/dc/elements/1.1/creator> "Art Barstow" .
+<http://www.site.org/version/125/> <http://purl.org/dc/elements/1.1/publisher> <http://www.w3.org/> .
