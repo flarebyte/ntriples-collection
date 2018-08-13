@@ -3,6 +3,7 @@
   "version": "1.2.0",
   "description": "Utility methods for filtering n-triples",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "bin/",
     "dist/"
@@ -16,7 +17,7 @@
     "watch": "watch 'npm run build' src test",
     "test": "babel-node test/index.js | tspec",
     "prebuild": "npm run check -s && npm run clean -s",
-    "build": "babel --optional runtime src -d dist",
+    "build": "babel --optional runtime src -d dist;cp src/*.ts dist",
     "postbuild": "npm run test -s",
     "coverage": "babel-node node_modules/isparta/bin/isparta cover test/index.js",
     "coveralls": "npm run coverage -s && coveralls < coverage/lcov.info",
@@ -64,8 +65,8 @@
     "watch": "^0.16.0"
   },
   "dependencies": {
-    "lodash": "^4.17.4",
-    "moment": "^2.18.1",
+    "lodash": "^4.17.10",
+    "moment": "^2.22.2",
     "n3": "^0.9.1",
     "string": "^3.3.3"
   }
