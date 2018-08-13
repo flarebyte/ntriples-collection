@@ -12,7 +12,7 @@ interface Triple {
  * @example
  * stringToNTriples(content);
  */
-export declare function stringToNTriples(content: string): array<Triple>;
+export declare function stringToNTriples(content: string): Array<Triple>;
 /**
  * Reads a n-triples file and converts it to an array of triples
  * @param {string} filename - the n-triples filename
@@ -29,7 +29,7 @@ export declare function stringToNTriples(content: string): array<Triple>;
  *  console.log(triples);
  * });
  */
-export declare function readNTriplesFile(filename: string, callback: function): void;
+export declare function readNTriplesFile(filename: string, callback: Function): void;
 /**
  * Saves an array of triples in a n-triples file
  * @param {string} filename - the n-triples filename
@@ -48,7 +48,7 @@ export declare function readNTriplesFile(filename: string, callback: function): 
  *  console.log(triples);
  * });
  */
-export declare function writeNTriplesFile(filename: string, triples: array<Triple>, callback: function): void;
+export declare function writeNTriplesFile(filename: string, triples: Array<Triple>, callback: Function): void;
 /**
  * Finds the first object value based on the predicate
  * @param {array} triples - an array of triples objects (subject is ignored)
@@ -59,7 +59,7 @@ export declare function writeNTriplesFile(filename: string, triples: array<Tripl
  * findObjectByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator')
  * @return {string} the string, integer, float, boolean, moment representing the literal value
  */
-export declare function findObjectByPredicate(triples: array<Triple>, predicate: string, defaultValue?: any): any;
+export declare function findObjectByPredicate(triples: Array<Triple>, predicate: string, defaultValue?: any): any;
 /**
  * Finds the first object value based on the predicate and the language
  * @param {array} triples - an array of triples objects (subject is ignored)
@@ -72,7 +72,7 @@ export declare function findObjectByPredicate(triples: array<Triple>, predicate:
  * findLocalizedObjectByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator', 'fr', ['en'])
  * @return {string} the string, integer, float, boolean, moment representing the literal value
  */
-export declare function findLocalizedObjectByPredicate(triples: array<Triple>, predicate: string, language: string, altLangs: array<string>, defaultValue?: any): any;
+export declare function findLocalizedObjectByPredicate(triples: Array<Triple>, predicate: string, language: string, altLangs: Array<string>, defaultValue?: any): any;
 /**
  * Finds all object values based on the predicate
  * @param {array} triples - an array of triples objects (subject is ignored)
@@ -82,4 +82,4 @@ export declare function findLocalizedObjectByPredicate(triples: array<Triple>, p
  * findObjectsByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator')
  * @return {array} of string, integer, float, boolean, moment representing the literal values
  */
-export declare function findObjectsByPredicate(triples: array<Triple>, predicate: string): array<any>;
+export declare function findObjectsByPredicate(triples: Array<Triple>, predicate: string): Array<any>;
