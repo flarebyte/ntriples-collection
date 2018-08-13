@@ -50,6 +50,23 @@ const asSemanticValue = (value) => {
 
 const asSemanticValues = values => _.map(values, asSemanticValue);
 
+
+/**
+ * Convert a string to an array of triples
+ * @param {string} content - the n-triples as content
+ * @returns {array} array of triples
+ * @example
+ * stringToNTriples(content);
+ */
+export function stringToNTriples(content) {
+  const n3parser = new Parser();
+  const n3parse = str => _.head(n3parser.parse(str));
+
+  const lines = _.filter(_S(content).lines(), isTriple);
+  const triples = _.map(lines, n3parse);
+  return withoutGraph(triples);
+}
+
 /**
  * Reads a n-triples file and converts it to an array of triples
  * @param {string} filename - the n-triples filename
@@ -67,16 +84,11 @@ const asSemanticValues = values => _.map(values, asSemanticValue);
  * });
  */
 export function readNTriplesFile(filename, callback) {
-  const n3parser = new Parser();
-  const n3parse = str => _.head(n3parser.parse(str));
-
   fs.readFile(filename, 'utf8', (err, data) => {
     if (err) {
       callback(err);
     } else {
-      const lines = _.filter(_S(data).lines(), isTriple);
-      const triples = _.map(lines, n3parse);
-      callback(null, withoutGraph(triples));
+      callback(null, stringToNTriples(data));
     }
   });
 }

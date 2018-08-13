@@ -23,7 +23,7 @@ test('ntriplesCollection should read n-triples file', (t) => {
     { object: '"Creator Alpha"', predicate: 'http://purl.org/dc/elements/1.1/creator', subject: 'http://www.site.org/version/123/' },
     { object: '"Publisher Beta"', predicate: 'http://purl.org/dc/elements/1.1/publisher', subject: 'http://www.site.org/version/124/' },
     { object: '"Creator Beta"', predicate: 'http://purl.org/dc/elements/1.1/creator', subject: 'http://www.site.org/version/124/' },
-    { object: '"Dave Beckett"', predicate: 'http://purl.org/dc/elements/1.1/creator', subject: 'http://www.site.org/version/125/' },
+    { object: '"Dave Beckett"@fr-be', predicate: 'http://purl.org/dc/elements/1.1/creator', subject: 'http://www.site.org/version/125/' },
     { object: '"Art Barstow"', predicate: 'http://purl.org/dc/elements/1.1/creator', subject: 'http://www.site.org/version/125/' },
     { object: 'http://www.w3.org/', predicate: 'http://purl.org/dc/elements/1.1/publisher', subject: 'http://www.site.org/version/125/' },
   ];
