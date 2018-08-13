@@ -1,10 +1,13 @@
 import _ from 'lodash';
-import _S from 'string';
+import lines from 'underscore.string/lines';
+import include from 'underscore.string/include';
+import toBoolean from 'underscore.string/toBoolean';
+import toNumber from 'underscore.string/toNumber';
 import moment from 'moment';
 import fs from 'fs';
 import { Util, Parser, Writer } from 'n3';
 
-const isTriple = str => _S(str).contains('<');
+const isTriple = str => include(str, '<');
 
 const omitGraph = t => _.pick(t, ['subject', 'predicate', 'object']);
 const withoutGraph = triples => _.map(triples, omitGraph);
@@ -19,13 +22,13 @@ const normalizeValue = (value, defaultValue) => {
     switch (litType) {
       case 'http://www.w3.org/2001/XMLSchema#string': return litValue;
       case 'http://www.w3.org/2001/XMLSchema#anyURI': return litValue;
-      case 'http://www.w3.org/2001/XMLSchema#integer': return _S(litValue).toInt();
-      case 'http://www.w3.org/2001/XMLSchema#nonPositiveInteger': return _S(litValue).toInt();
-      case 'http://www.w3.org/2001/XMLSchema#negativeInteger': return _S(litValue).toInt();
-      case 'http://www.w3.org/2001/XMLSchema#nonNegativeInteger': return _S(litValue).toInt();
-      case 'http://www.w3.org/2001/XMLSchema#positiveInteger': return _S(litValue).toInt();
-      case 'http://www.w3.org/2001/XMLSchema#float': return _S(litValue).toFloat();
-      case 'http://www.w3.org/2001/XMLSchema#boolean': return _S(litValue).toBool();
+      case 'http://www.w3.org/2001/XMLSchema#integer': return toNumber(litValue);
+      case 'http://www.w3.org/2001/XMLSchema#nonPositiveInteger': return toNumber(litValue);
+      case 'http://www.w3.org/2001/XMLSchema#negativeInteger': return toNumber(litValue);
+      case 'http://www.w3.org/2001/XMLSchema#nonNegativeInteger': return toNumber(litValue);
+      case 'http://www.w3.org/2001/XMLSchema#positiveInteger': return toNumber(litValue);
+      case 'http://www.w3.org/2001/XMLSchema#float': return toNumber(litValue, 6);
+      case 'http://www.w3.org/2001/XMLSchema#boolean': return toBoolean(litValue);
       case 'http://www.w3.org/2001/XMLSchema#dateTime': return moment(litValue, moment.ISO_8601);
       case 'http://www.w3.org/2001/XMLSchema#date': return moment(litValue, moment.ISO_8601);
       case 'http://www.w3.org/2001/XMLSchema#time': return litValue;
@@ -62,8 +65,8 @@ export function stringToNTriples(content) {
   const n3parser = new Parser();
   const n3parse = str => _.head(n3parser.parse(str));
 
-  const lines = _.filter(_S(content).lines(), isTriple);
-  const triples = _.map(lines, n3parse);
+  const n3lines = _.filter(lines(content), isTriple);
+  const triples = _.map(n3lines, n3parse);
   return withoutGraph(triples);
 }
 
