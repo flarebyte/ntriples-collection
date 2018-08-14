@@ -4,6 +4,12 @@ interface Triple {
     object: string,
 }
 
+interface SemanticValue {
+    value: string,
+    literalValue: any,
+    literalType: string,
+    literalLanguage: string
+}
 
 /**
  * Convert a string to an array of triples
@@ -12,7 +18,7 @@ interface Triple {
  * @example
  * stringToNTriples(content);
  */
-export declare function stringToNTriples(content: string): Array<Triple>;
+export declare function stringToNTriples(content: string): ReadonlyArray<Triple>;
 /**
  * Reads a n-triples file and converts it to an array of triples
  * @param {string} filename - the n-triples filename
@@ -48,7 +54,7 @@ export declare function readNTriplesFile(filename: string, callback: Function): 
  *  console.log(triples);
  * });
  */
-export declare function writeNTriplesFile(filename: string, triples: Array<Triple>, callback: Function): void;
+export declare function writeNTriplesFile(filename: string, triples: ReadonlyArray<Triple>, callback: Function): void;
 /**
  * Finds the first object value based on the predicate
  * @param {array} triples - an array of triples objects (subject is ignored)
@@ -59,7 +65,20 @@ export declare function writeNTriplesFile(filename: string, triples: Array<Tripl
  * findObjectByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator')
  * @return {string} the string, integer, float, boolean, moment representing the literal value
  */
-export declare function findObjectByPredicate(triples: Array<Triple>, predicate: string, defaultValue?: any): any;
+export declare function findObjectByPredicate(triples: ReadonlyArray<Triple>, predicate: string, defaultValue?: any): any;
+
+/**
+ * Finds the first string value based on the predicate
+ * @param {array} triples - an array of triples objects (subject is ignored)
+ * @param {string} predicate - the uri representing the predicate
+ * @param {object} defaultValue - the object/string to return if null
+ * @example
+ * // returns Amadeus
+ * findObjectByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator')
+ * @return {string} the string representing the literal value
+ */
+export declare function findStringByPredicate(triples: ReadonlyArray<Triple>, predicate: string, defaultValue?: string): string | null;
+
 /**
  * Finds the first object value based on the predicate and the language
  * @param {array} triples - an array of triples objects (subject is ignored)
@@ -72,7 +91,22 @@ export declare function findObjectByPredicate(triples: Array<Triple>, predicate:
  * findLocalizedObjectByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator', 'fr', ['en'])
  * @return {string} the string, integer, float, boolean, moment representing the literal value
  */
-export declare function findLocalizedObjectByPredicate(triples: Array<Triple>, predicate: string, language: string, altLangs: Array<string>, defaultValue?: any): any;
+export declare function findLocalizedObjectByPredicate(triples: ReadonlyArray<Triple>, predicate: string, language: string, altLangs: ReadonlyArray<string>, defaultValue?: any): any;
+
+/**
+ * Finds the first object value based on the predicate and the language
+ * @param {array} triples - an array of triples objects (subject is ignored)
+ * @param {string} predicate - the uri representing the predicate
+ * @param {string} language - the requested language
+ * @param {array} altLangs - an array of alternative languages (max 2)
+ * @param {object} defaultValue - the object/string to return if null
+ * @example
+ * // returns Amadeus
+ * findLocalizedObjectByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator', 'fr', ['en'])
+ * @return {string} the string, integer, float, boolean, moment representing the literal value
+ */
+export declare function findLocalizedStringByPredicate(triples: ReadonlyArray<Triple>, predicate: string, language: string, altLangs: ReadonlyArray<string>, defaultValue?: string): string | null;
+
 /**
  * Finds all object values based on the predicate
  * @param {array} triples - an array of triples objects (subject is ignored)
@@ -82,4 +116,39 @@ export declare function findLocalizedObjectByPredicate(triples: Array<Triple>, p
  * findObjectsByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator')
  * @return {array} of string, integer, float, boolean, moment representing the literal values
  */
-export declare function findObjectsByPredicate(triples: Array<Triple>, predicate: string): Array<any>;
+export declare function findObjectsByPredicate(triples: ReadonlyArray<Triple>, predicate: string): ReadonlyArray<any>;
+
+/**
+ * Finds all object values based on the predicate
+ * @param {array} triples - an array of triples objects (subject is ignored)
+ * @param {string} predicate - the uri representing the predicate
+ * @example
+ * // returns [Amadeus, Bach]
+ * findObjectsByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator')
+ * @return {array} of string representing the literal values
+ */
+export declare function findStringsByPredicate(triples: ReadonlyArray<Triple>, predicate: string): ReadonlyArray<string>;
+
+/**
+ * Convert an array of triples to a string
+ * @param {array} array of triples
+ * @return {string} content - the n-triples as content
+ * @example
+ * nTriplesToString(triples);
+ */
+export declare function nTriplesToString(triples: ReadonlyArray<Triple>): string;
+
+/**
+ * Extracts the different parts of an object value
+ * @param {string} value - a string such as "A"@en
+ * @returns {object} the literal value, the literal type and language
+ */
+export declare function asSemanticValue(value: string): SemanticValue;
+
+/**
+ * Extracts an array of semantic values
+ * @param {array} values - a array of string such as ["A"@en]
+ * @returns {array} an array of objects describing the literal value, the literal type and language
+ */
+export declare function asSemanticValues(value: ReadonlyArray<string>): ReadonlyArray<SemanticValue>;
+

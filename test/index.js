@@ -5,8 +5,14 @@ import _ from 'lodash';
 import { readNTriplesFile,
    writeNTriplesFile,
    findObjectByPredicate,
+   findStringByPredicate,
    findLocalizedObjectByPredicate,
+   findLocalizedStringByPredicate,
    findObjectsByPredicate,
+   findStringsByPredicate,
+   nTriplesToString,
+   asSemanticValue,
+   asSemanticValues,
   } from '../src';
 
 const fixturesDir = path.resolve(__dirname, 'fixtures');
@@ -61,6 +67,33 @@ test('ntriplesCollection should write n-triples file', (t) => {
   });
 });
 
+test('ntriplesCollection should write n-triples as string', (t) => {
+  t.plan(1);
+  const graph = '/only-for-quad';
+  const triples = [
+    { graph, object: '"Publisher Alpha"', predicate: 'http://purl.org/dc/elements/1.1/publisher', subject: 'http://www.site.org/version/123/' },
+    { graph, object: '"Creator Alpha"@en', predicate: 'http://purl.org/dc/elements/1.1/creator', subject: 'http://www.site.org/version/123/' },
+    { graph, object: '"Publisher Beta"', predicate: 'http://purl.org/dc/elements/1.1/publisher', subject: 'http://www.site.org/version/124/' },
+    { graph, object: '"Creator Beta"', predicate: 'http://purl.org/dc/elements/1.1/creator', subject: 'http://www.site.org/version/124/' },
+    { graph, object: '"Dave\nBeckett"', predicate: 'http://purl.org/dc/elements/1.1/creator', subject: 'http://www.site.org/version/125/' },
+    { graph, object: '"Art Barstow"', predicate: 'http://purl.org/dc/elements/1.1/creator', subject: 'http://www.site.org/version/125/' },
+    { graph, object: 'http://www.w3.org/', predicate: 'http://purl.org/dc/elements/1.1/publisher', subject: 'http://www.site.org/version/125/' },
+    { graph, object: '"3"^^http://www.w3.org/2001/XMLSchema#integer', predicate: 'https://w.org/g', subject: 'http://www.site.org/version/125/' },
+  ];
+  const expected = [
+    '<http://www.site.org/version/123/> <http://purl.org/dc/elements/1.1/publisher> "Publisher Alpha".',
+    '<http://www.site.org/version/123/> <http://purl.org/dc/elements/1.1/creator> "Creator Alpha"@en.',
+    '<http://www.site.org/version/124/> <http://purl.org/dc/elements/1.1/publisher> "Publisher Beta".',
+    '<http://www.site.org/version/124/> <http://purl.org/dc/elements/1.1/creator> "Creator Beta".',
+    '<http://www.site.org/version/125/> <http://purl.org/dc/elements/1.1/creator> "Dave\\nBeckett".',
+    '<http://www.site.org/version/125/> <http://purl.org/dc/elements/1.1/creator> "Art Barstow".',
+    '<http://www.site.org/version/125/> <http://purl.org/dc/elements/1.1/publisher> <http://www.w3.org/>.',
+    '<http://www.site.org/version/125/> <https://w.org/g> "3"^^<http://www.w3.org/2001/XMLSchema#integer>.',
+  ].join('\n');
+  const actual = nTriplesToString(triples);
+  t.deepEqual(actual, expected, 'same n-triples');
+});
+
 test('ntriplesCollection should find object by predicate', (t) => {
   t.plan(11);
   const graph = '/only-for-quad';
@@ -104,6 +137,49 @@ test('ntriplesCollection should find object by predicate', (t) => {
   t.equal(actualK.format('YYYY/MM'), '2017/03', 'Date');
 });
 
+test('ntriplesCollection should find string by predicate', (t) => {
+  t.plan(11);
+  const graph = '/only-for-quad';
+  const subject = 'http://www.site.org/subject/123/';
+  const triples = [
+    { object: '"A"', predicate: 'http://w.org/a', subject, graph },
+    { object: '"B"', predicate: 'http://w.org/b', subject, graph },
+    { object: '"C"', predicate: 'http://w.org/c', subject },
+    { object: '"D"@en', predicate: 'http://w.org/d', subject, graph },
+    { object: '"D2"', predicate: 'http://w.org/d', subject, graph },
+    { object: '"E"', predicate: 'http://w.org/e', subject },
+    { object: '"D3"', predicate: 'http://w.org/d', subject, graph },
+    { object: '"3"^^http://www.w3.org/2001/XMLSchema#integer', predicate: 'http://w.org/g', subject },
+    { object: '"3.2"^^http://www.w3.org/2001/XMLSchema#float', predicate: 'http://w.org/h', subject, graph },
+    { object: '"true"^^http://www.w3.org/2001/XMLSchema#boolean', predicate: 'http://w.org/i', subject },
+    { object: '"2017-04-01T10:45:54Z"^^http://www.w3.org/2001/XMLSchema#dateTime', predicate: 'http://w.org/j', subject, graph },
+    { object: '"2017-03-01"^^http://www.w3.org/2001/XMLSchema#date', predicate: 'http://w.org/k', subject },
+  ];
+  const actualB = findStringByPredicate(triples, 'http://w.org/b');
+  const actualC = findStringByPredicate(triples, 'http://w.org/c');
+  const actualD = findStringByPredicate(triples, 'http://w.org/d');
+  const actualE = findStringByPredicate(triples, 'http://w.org/e');
+  const actualG = findStringByPredicate(triples, 'http://w.org/g');
+  const actualH = findStringByPredicate(triples, 'http://w.org/h');
+  const actualI = findStringByPredicate(triples, 'http://w.org/i');
+  const actualJ = findStringByPredicate(triples, 'http://w.org/j');
+  const actualK = findStringByPredicate(triples, 'http://w.org/k');
+  const actualUnknown = findStringByPredicate(triples, 'http://w.org/none');
+  const actualUnknownDef = findStringByPredicate(triples, 'http://w.org/none', 'NULL');
+
+  t.equal(actualUnknown, null, 'Unknown');
+  t.equal(actualUnknownDef, 'NULL', 'Unknown with default');
+  t.equal(actualB, 'B', 'B');
+  t.equal(actualC, 'C', 'C');
+  t.equal(actualD, 'D', 'D');
+  t.equal(actualE, 'E', 'E');
+  t.equal(actualG, '3', 'Integer');
+  t.equal(actualH, '3.2', 'Float');
+  t.ok(actualI, 'boolean');
+  t.equal(actualJ, '1491043554000', 'DateTime');
+  t.equal(actualK, '1488326400000', 'Date');
+});
+
 test('ntriplesCollection should find localized object by predicate', (t) => {
   t.plan(10);
   const graph = '/only-for-quad';
@@ -130,7 +206,33 @@ test('ntriplesCollection should find localized object by predicate', (t) => {
   t.equal(find('de', ['jp', 'it'], 'NULL'), 'NULL', 'de then jp then it NULL');
 });
 
-test('ntriplesCollection should find localized object by predicate', (t) => {
+test('ntriplesCollection should find localized string by predicate', (t) => {
+  t.plan(10);
+  const graph = '/only-for-quad';
+  const subject = 'http://www.site.org/subject/123/';
+  const triples = [
+    { object: '"A"', predicate: 'http://w.org/a', subject },
+    { object: '"A-en"@en', predicate: 'http://w.org/a', subject, graph },
+    { object: '"A-fr"@fr', predicate: 'http://w.org/a', subject },
+    { object: '"A-es"@es', predicate: 'http://w.org/a', subject, graph },
+    { object: '"B"', predicate: 'http://w.org/b', subject },
+  ];
+
+  const find = (lang, langs, defval) => findLocalizedStringByPredicate(triples, 'http://w.org/a', lang, langs, defval);
+
+  t.equal(find('fr'), 'A-fr', 'fr');
+  t.equal(find(''), 'A', 'no lang');
+  t.equal(find('de'), null, 'de');
+  t.equal(find('de', [], 'NULL'), 'NULL', 'de NULL');
+  t.equal(find('de', ['en']), 'A-en', 'de then en');
+  t.equal(find('de', ['jp', '']), 'A', 'de then jp then no localised');
+  t.equal(find('de', ['jp']), null, 'de then jp');
+  t.equal(find('de', ['jp'], 'NULL'), 'NULL', 'de then jp NULL');
+  t.equal(find('de', ['jp', 'it']), null, 'de then jp then it');
+  t.equal(find('de', ['jp', 'it'], 'NULL'), 'NULL', 'de then jp then it NULL');
+});
+
+test('ntriplesCollection should find objects by predicate', (t) => {
   t.plan(2);
   const graph = '/only-for-quad';
   const subject = 'http://www.site.org/subject/123/';
@@ -146,4 +248,60 @@ test('ntriplesCollection should find localized object by predicate', (t) => {
   const expected = ['A', 'A-en', 'A-fr', 'A-es'];
   t.deepEqual(actual, expected, 'a list of A');
   t.deepEqual(findObjectsByPredicate(triples, 'http://w.org/z'), [], 'unknown');
+});
+
+test('ntriplesCollection should find strings by predicate', (t) => {
+  t.plan(2);
+  const graph = '/only-for-quad';
+  const subject = 'http://www.site.org/subject/123/';
+  const triples = [
+    { object: '"A"', predicate: 'http://w.org/a', subject, graph },
+    { object: '"A-en"@en', predicate: 'http://w.org/a', subject },
+    { object: '"A-fr"@fr', predicate: 'http://w.org/a', subject, graph },
+    { object: '"A-es"@es', predicate: 'http://w.org/a', subject },
+    { object: '"B"', predicate: 'http://w.org/b', subject, graph },
+  ];
+
+  const actual = findStringsByPredicate(triples, 'http://w.org/a');
+  const expected = ['A', 'A-en', 'A-fr', 'A-es'];
+  t.deepEqual(actual, expected, 'a list of A');
+  t.deepEqual(findObjectsByPredicate(triples, 'http://w.org/z'), [], 'unknown');
+});
+
+test('ntriplesCollection should support asSemanticValue', (t) => {
+  t.plan(3);
+  t.deepEqual(asSemanticValue('"A"@en'),
+    { literalLanguage: 'en',
+      literalType: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString',
+      literalValue: 'A',
+      value: '"A"@en' }
+  , 'value with language');
+
+  t.deepEqual(asSemanticValue('"B"'),
+    { literalLanguage: '',
+      literalType: 'http://www.w3.org/2001/XMLSchema#string',
+      literalValue: 'B',
+      value: '"B"' }
+, 'value alone');
+
+  t.deepEqual(asSemanticValue('"true"^^http://www.w3.org/2001/XMLSchema#boolean'),
+    { literalLanguage: '',
+      literalType: 'http://www.w3.org/2001/XMLSchema#boolean',
+      literalValue: true,
+      value: '"true"^^http://www.w3.org/2001/XMLSchema#boolean' }
+  , 'boolean value');
+});
+
+test('ntriplesCollection should support asSemanticValues', (t) => {
+  t.plan(1);
+  t.deepEqual(asSemanticValues(['"A"@en', '"A"@en']),
+    [{ literalLanguage: 'en',
+      literalType: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString',
+      literalValue: 'A',
+      value: '"A"@en' },
+    { literalLanguage: 'en',
+      literalType: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString',
+      literalValue: 'A',
+      value: '"A"@en' }]
+  , 'two values');
 });

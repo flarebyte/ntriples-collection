@@ -44,6 +44,11 @@ const normalizeValue = (value, defaultValue) => {
 const normalizeValues = (values, defaultValue) =>
   _.map(values, v => normalizeValue(v, defaultValue));
 
+/**
+ * Extracts the different parts of an object value
+ * @param {string} value - a string such as "A"@en
+ * @returns {object} the literal value, the literal type and language
+ */
 const asSemanticValue = (value) => {
   const literalValue = normalizeValue(value, null);
   const literalType = Util.getLiteralType(value);
@@ -51,8 +56,14 @@ const asSemanticValue = (value) => {
   return { value, literalValue, literalType, literalLanguage };
 };
 
+/**
+ * Extracts an array of semantic values
+ * @param {array} values - a array of string such as ["A"@en]
+ * @returns {array} an array of objects describing the literal value, the literal type and language
+ */
 const asSemanticValues = values => _.map(values, asSemanticValue);
 
+export { asSemanticValue, asSemanticValues };
 
 /**
  * Convert a string to an array of triples
@@ -94,6 +105,85 @@ export function readNTriplesFile(filename, callback) {
       callback(null, stringToNTriples(data));
     }
   });
+}
+
+/** Borrowed and adpated from N3.js library */
+
+// Matches a literal as represented in memory by the N3 library
+const N3LiteralMatcher = /^"([^]*)"(?:\^\^(.+)|@([-a-z]+))?$/i;
+
+// Characters in literals that require escaping
+const escape = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/;
+const escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g;
+const escapeReplacements = {
+  '\\': '\\\\',
+  '"': '\\"',
+  '\t': '\\t',
+  '\n': '\\n',
+  '\r': '\\r',
+  '\b': '\\b',
+  '\f': '\\f',
+};
+
+// Replaces a character by its escaped version
+const characterReplacer = (character) => {
+  // Replace a single character by its escaped version
+  let result = escapeReplacements[character];
+  if (result === undefined) {
+    // Replace a single character with its 4-bit unicode escape sequence
+    if (character.length === 1) {
+      result = character.charCodeAt(0).toString(16);
+      result = '\\u0000'.substr(0, 6 - result.length) + result;
+    } else {
+      // Replace a surrogate pair with its 8-bit unicode escape sequence
+      const first = (character.charCodeAt(0) - 0xD800) * 0x400;
+      result = (first + character.charCodeAt(1) + 0x2400).toString(16);
+      result = '\\U00000000'.substr(0, 10 - result.length) + result;
+    }
+  }
+  return result;
+};
+
+const encodeIri = (iriEntity) => {
+    // Escape special characters
+  const entity = escape.test(iriEntity) ?
+   iriEntity.replace(escapeAll, characterReplacer) : iriEntity;
+  return `<${entity}>`;
+};
+
+const encodeLiteral = (litValue, type, language) => {
+  // Escape special characters
+  const value = escape.test(litValue) ? litValue.replace(escapeAll, characterReplacer) : litValue;
+  if (language) {
+    return `"${value}"@${language}`;
+  } else if (type) { return `"${value}"^^${encodeIri(type)}`; }
+  return `"${value}"`;
+};
+
+const encodeObject = (object) => {
+  // Represent an IRI or blank node
+  if (object[0] !== '"') {
+    return encodeIri(object);
+  }
+  // Represent a literal
+  const match = N3LiteralMatcher.exec(object);
+  if (!match) throw new Error(`Invalid literal: ${object}`);
+  return encodeLiteral(match[1], match[2], match[3]);
+};
+
+const tripleToString = triple =>
+  `${encodeIri(triple.subject)} ${encodeIri(triple.predicate)} ${encodeObject(triple.object)}.`;
+
+
+/**
+ * Convert an array of triples to a string
+ * @param {array} array of triples
+ * @return {string} content - the n-triples as content
+ * @example
+ * nTriplesToString(triples);
+ */
+export function nTriplesToString(triples) {
+  return _.join(_.map(withoutGraph(triples), tripleToString), '\n');
 }
 
 /**
@@ -141,6 +231,21 @@ export function findObjectByPredicate(triples, predicate, defaultValue = null) {
 }
 
 /**
+ * Finds the first object value based on the predicate
+ * @param {array} triples - an array of triples objects (subject is ignored)
+ * @param {string} predicate - the uri representing the predicate
+ * @param {object} defaultValue - the string to return if null
+ * @example
+ * // returns Amadeus
+ * findObjectByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator')
+ * @return {string} the string representing the literal value
+ */
+export function findStringByPredicate(triples, predicate, defaultValue = null) {
+  const value = findObjectByPredicate(triples, predicate, defaultValue);
+  return _.isNil(value) ? null : _.toString(value);
+}
+
+/**
  * Finds the first object value based on the predicate and the language
  * @param {array} triples - an array of triples objects (subject is ignored)
  * @param {string} predicate - the uri representing the predicate
@@ -175,6 +280,26 @@ export function findLocalizedObjectByPredicate(triples, predicate, language, alt
 }
 
 /**
+ * Finds the first string value based on the predicate and the language
+ * @param {array} triples - an array of triples objects (subject is ignored)
+ * @param {string} predicate - the uri representing the predicate
+ * @param {string} language - the requested language
+ * @param {array} altLangs - an array of alternative languages (max 2)
+ * @param {object} defaultValue - the object/string to return if null
+ * @example
+ * // returns Amadeus
+ * findLocalizedObjectByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator', 'fr', ['en'])
+ * @return {string} the string epresenting the literal value
+ */
+export function findLocalizedStringByPredicate(triples, predicate, language, altLangs,
+  defaultValue = null) {
+  const value = findLocalizedObjectByPredicate(triples, predicate, language, altLangs,
+    defaultValue);
+  return _.isNil(value) ? null : _.toString(value);
+}
+
+
+/**
  * Finds all object values based on the predicate
  * @param {array} triples - an array of triples objects (subject is ignored)
  * @param {string} predicate - the uri representing the predicate
@@ -186,4 +311,19 @@ export function findLocalizedObjectByPredicate(triples, predicate, language, alt
 export function findObjectsByPredicate(triples, predicate) {
   const values = _.map(_.filter(triples, { predicate }), 'object');
   return normalizeValues(values);
+}
+
+/**
+ * Finds all object values based on the predicate
+ * @param {array} triples - an array of triples objects (subject is ignored)
+ * @param {string} predicate - the uri representing the predicate
+ * @example
+ * // returns [Amadeus, Bach]
+ * findObjectsByPredicate(triples, 'http://purl.org/dc/elements/1.1/creator')
+ * @return {array} of string representing the literal values
+ */
+export function findStringsByPredicate(triples, predicate) {
+  const values = findObjectsByPredicate(triples, predicate);
+  const strings = _.map(values, _.toString);
+  return strings;
 }
